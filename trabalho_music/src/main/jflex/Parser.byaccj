@@ -1,0 +1,68 @@
+%{
+import java.io.*;
+import java.util.ArrayList;
+%}
+
+%token INT DOT UP UP_C DOWN DOWN_C T_UP T_UP_C T_DOWN T_DOWN_C MAJOR
+%%
+        axiom: program    { commands = (ArrayList<Command>) $1.obj ; }
+;
+
+program: /* epsilon */   {
+$$ = new ParserVal(new ArrayList<Command>());
+}
+|  program instruction { ((ArrayList<Command>) $1.obj ).add( (Command)$2.obj );  $$ = $1; }
+;
+
+instruction: DOT { $$ = new ParserVal(new Dot()); }
+            | UP_C value '}' { $$ = new ParserVal(new Up((Value)$3.obj)); }
+            | UP { $$ = new ParserVal(new Up()); }
+            | DOWN_C value '}' { $$ = new ParserVal(new Down((Value)$3.obj)); }
+            | DOWN { $$ = new ParserVal(new Down()); }
+            | T_UP { $$ = new ParserVal(new Tempo_Increase()); }
+            | T_UP_C value '}' { $$ = new ParserVal(new Tempo_Increase_C($3.ival)); }
+            | T_DOWN { $$ = new ParserVal(new Tempo_Decrease()); }
+            | T_DOWN_C value '}' { $$ = new ParserVal(new Tempo_Decrease_C($3.ival)); }
+            | MAJOR { $$ =  new ParserVal(new MajorScale()); }
+            ;
+
+value: INT  {  $$ = new ParserVal(new Value($1.ival)); }
+;
+%%
+
+private Lexer lexer;
+public ArrayList<Command> commands;
+
+public Parser(Reader r) {
+        lexer = new Lexer(r, this);
+        commands = new ArrayList<Command>();
+        }
+
+public void yyerror(String error) {
+        System.err.println("*** ERROR *** " + error);
+        }
+
+private int yylex() {
+        int returnValue = -1;
+        try {
+        returnValue = lexer.yylex();
+        }
+        catch (IOException e) {
+        System.err.println("**IO ERROR** " + e);
+        }
+        return returnValue;
+        }
+
+
+        /*new ParserVal(new Dot());
+                            new ParserVal(new Up());
+                            new ParserVal(new Up());
+                            new ParserVal(new Dot());
+                            new ParserVal(new Up());
+                            new ParserVal(new Up());
+                            new ParserVal(new Dot());
+                            new ParserVal(new Up());
+                            new ParserVal(new Up());
+                            new ParserVal(new Dot());
+                            new ParserVal(new Up());
+                            new ParserVal(new Up());}*/
